@@ -33,9 +33,9 @@ io.on('connection', function(socket){
     console.log('user disconnected');
   });
 
-  socket.on('chat message', function(msg){
-    io.emit('chat message', msg);
-    //console.log(msg);
+  socket.on('chat message', function(msg, usr){
+    io.emit('chat message', msg, Date().toLocaleString(), usr);
+    console.log("Date: " + Date().toLocaleString() + " msg: " + msg + " from user: " + usr);
   });
 
 });
