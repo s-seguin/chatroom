@@ -4,9 +4,7 @@ var path = require('path');
 var app = express();
 app.use(express.static(path.join(__dirname, 'public')));
 
-/**
- * Creating the server and listening on the port
- */
+//create server and listen on port 3000
 var http = require('http').Server(app);
 
 http.listen(3000, function(){
@@ -14,28 +12,35 @@ http.listen(3000, function(){
 });
 
 
-/**
- * Basic routing since its a single page app
- */
+//Basic routing
 app.get('/', function(req, res){
   res.sendFile(__dirname + '/index.html');
 });
 
-/**
- * Socket IO stuff
- */
+//Socket io stuff
 var io = require('socket.io').listen(http);
 
+let chatLog = []; //a history of the chat log kept in memory
+let activeUsers = [];
+let numUsers = 0;
+
 io.on('connection', function(socket){
-  socket.broadcast.emit('I connected');
+    io.emit('chat log', chatLog);
+
+    activeUsers.push("randoUser_" + numUsers);
+    numUsers++;
+    console.log(activeUsers[activeUsers.length - 1] + " joined the chat");
 
   socket.on('disconnect', function(){
-    console.log('user disconnected');
+      //console.log('user disconnected');
+      numUsers--;
   });
 
   socket.on('chat message', function(msg, usr){
-    io.emit('chat message', msg, Date().toLocaleString(), usr);
-    console.log("Date: " + Date().toLocaleString() + " msg: " + msg + " from user: " + usr);
+      let date = Date().toLocaleString();
+      io.emit('chat message', msg, date, usr);
+      chatLog.push({"user": usr, "date": date, "msg": msg});
+      console.log(chatLog);
   });
 
 });
