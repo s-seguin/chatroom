@@ -4,7 +4,8 @@ $(function () {
 
     var userName = document.cookie.replace(/(?:(?:^|.*;\s*)userInfo\s*\=\s*([^;]*).*$)|^.*$/, "$1");
 
-    document.getElementById("greetingHeader").innerText = "Hello " + userName;
+    //document.getElementById("greetingHeader").innerText = "Hello " + userName;
+    $('#greetingHeader').text("Hello " + userName);
 
     $('form').submit(function(e){
         e.preventDefault(); // prevents page reloading
@@ -28,5 +29,15 @@ $(function () {
         } else {
             console.log("We've already imported the chat log.");
         }
+    });
+
+    socket.on('user list', function (userList) {
+        console.log(userName + " joined my chat!");
+        $('#userList').empty();
+        for (let name in userList) {
+            console.log(userList[name]);
+            $('#userList').append($('<li>').text(userList[name]));
+        }
+        
     });
 });

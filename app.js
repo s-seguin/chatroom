@@ -30,7 +30,6 @@ app.get('/', function(req, res){
         console.log("Cookie unset, setting to " + userName);
         res.cookie('userInfo', userName, {maxAge: 4 * 60 * 60 * 1000});
 
-
     } else {
        console.log("Welcome back " + userCookie);
        if (userList.indexOf(userCookie) == -1) {
@@ -38,8 +37,6 @@ app.get('/', function(req, res){
        } else {
            console.log("There already appears to be a " + userCookie + " in the user list")
        }
-
-
     }
 
 
@@ -49,11 +46,15 @@ app.get('/', function(req, res){
 
 io.on('connection', function(socket){
     io.emit('chat log', chatLog); //broadcast the chatLog to everyone since someone new joined
+    addUserToUserList(getUserNameFromSocketCookie(socket));
+    io.emit('user list', userList); //broadcast the userList on new connection or disconnect
 
     socket.on('disconnect', function(){
-        let cookie = socket.request.headers.cookie;
-        let userName = cookie.replace(/(?:(?:^|.*;\s*)userInfo\s*\=\s*([^;]*).*$)|^.*$/, "$1");; //parse the userName from the userInfo cookie
-        console.log(userName + ' disconnected');
+        console.log(getUserNameFromSocketCookie(socket) + ' disconnected');
+        removeUserFromUserList(getUserNameFromSocketCookie(socket));
+        
+        io.emit('user list', userList);
+
     });
 
     socket.on('chat message', function(msg, usr){
@@ -64,7 +65,26 @@ io.on('connection', function(socket){
 
 });
 
+function addUserToUserList(userName) {
+    if (userList.indexOf(userName) == -1)
+        userList.push(userName);
+}
 
+function removeUserFromUserList(userName) {
+    let index = userList.indexOf(userName);
+    if (index > -1)
+        userList.splice(index, 1);
+        
+}
+
+/**
+ * Parse the cookies in the socket for the userinfo cookie
+ * @param {socket} socket 
+ */
+function getUserNameFromSocketCookie(socket) {
+    let cookie = socket.request.headers.cookie;
+    return cookie.replace(/(?:(?:^|.*;\s*)userInfo\s*\=\s*([^;]*).*$)|^.*$/, "$1"); //parse the userName from the userInfo cookie
+}
 
 
 
