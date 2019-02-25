@@ -1,47 +1,86 @@
 var express = require('express');
 var path = require('path');
+var cookieParser = require('cookie-parser');
 
 var app = express();
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(cookieParser());
 
-//create server and listen on port 3000
+//create server
 var http = require('http').Server(app);
 
+//listen on port 3000
 http.listen(3000, function(){
-  console.log('listening on *:3000');
-});
-
-
-//Basic routing
-app.get('/', function(req, res){
-  res.sendFile(__dirname + '/index.html');
+    console.log('listening on *:3000');
 });
 
 //Socket io stuff
 var io = require('socket.io').listen(http);
 
 let chatLog = []; //a history of the chat log kept in memory
-let activeUsers = [];
-let numUsers = 0;
+let userList = []; //
+const POTENTIAL_USERNAMES = ["steve", "alice", "joe", "panther", "tiger", "falcon", "zebra"];
 
-io.on('connection', function(socket){
-    io.emit('chat log', chatLog);
+//Basic routing
+app.get('/', function(req, res){
+    //Create a user cookie so that we can keep track of userList
+    let userCookie = req.cookies.userInfo;
+    if (userCookie === undefined) {
+        let userName = createNewUser();
+        console.log("Cookie unset, setting to " + userName);
+        res.cookie('userInfo', userName, {maxAge: 4 * 60 * 60 * 1000});
 
-    activeUsers.push("randoUser_" + numUsers);
-    numUsers++;
-    console.log(activeUsers[activeUsers.length - 1] + " joined the chat");
 
-  socket.on('disconnect', function(){
-      //console.log('user disconnected');
-      numUsers--;
-  });
+    } else {
+       console.log("Welcome back " + userCookie);
+       if (userList.indexOf(userCookie) == -1) {
+           userList.push(userCookie);
+       } else {
+           console.log("There already appears to be a " + userCookie + " in the user list")
+       }
 
-  socket.on('chat message', function(msg, usr){
-      let date = Date().toLocaleString();
-      io.emit('chat message', msg, date, usr);
-      chatLog.push({"user": usr, "date": date, "msg": msg});
-      console.log(chatLog);
-  });
+
+    }
+
+
+    res.sendFile(__dirname + '/index.html');
 
 });
 
+io.on('connection', function(socket){
+    io.emit('chat log', chatLog); //broadcast the chatLog to everyone since someone new joined
+
+    socket.on('disconnect', function(){
+        let cookie = socket.request.headers.cookie;
+        let userName = cookie.replace(/(?:(?:^|.*;\s*)userInfo\s*\=\s*([^;]*).*$)|^.*$/, "$1");; //parse the userName from the userInfo cookie
+        console.log(userName + ' disconnected');
+    });
+
+    socket.on('chat message', function(msg, usr){
+        let date = Date().toLocaleString();
+        io.emit('chat message', msg, date, usr);
+        chatLog.push({"user": usr, "date": date, "msg": msg});
+    });
+
+});
+
+
+
+
+
+function createNewUser() {
+    let userName = "";
+
+    if (userList.length > POTENTIAL_USERNAMES.length)
+        userName = POTENTIAL_USERNAMES[Math.floor(Math.random()*7)] + "_" + Math.floor(Math.random() * 100);
+    else
+        userName = POTENTIAL_USERNAMES[userList.length];
+
+    //if the username already exists in the list
+    if (userList.indexOf(userName) != -1)
+        console.log("Duplicate userList in userList list");
+
+    userList.push(userName);
+
+    return userName;
+}
