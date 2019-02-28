@@ -14,14 +14,20 @@ $(function () {
         return false;
     });
 
-    socket.on('chat message', function(msg, date, user){
-        $('#messageList').append($('<li>').text(user +": " + msg +" on " + date));
+    socket.on('chat message', function(msg, time, user) {
+        if (user == userName)
+            $('#messageList').append($('<li>').text(time + "  " + user + ": " + msg ).addClass("myMessage"));
+        else
+            $('#messageList').append($('<li>').text(time + "  " + user + ": " + msg ));
     });
 
     socket.on('chat log', function (log) {
         if (!chatLogUpToDate) {
             for (let entry in log) {
-                $('#messageList').append($('<li>').text(log[entry].user + ": " + log[entry].msg + " on " + log[entry].date));
+                if (log[entry].user == userName)
+                    $('#messageList').append($('<li>').text(log[entry].time + " " + log[entry].user + ": " + log[entry].msg ).addClass("myMessage"));
+                else
+                    $('#messageList').append($('<li>').text(log[entry].time + " " + log[entry].user + ": " + log[entry].msg ));
             }
             chatLogUpToDate = true;
         } else {
@@ -38,3 +44,4 @@ $(function () {
         
     });
 });
+

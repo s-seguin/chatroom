@@ -1,6 +1,36 @@
 ul {
     overflow: hidden;
     overflow-y: scroll;
-    background-color: lightgray;
-    height: 70%;
+    /*background-color: lightgray;*/
+}
+
+#messageList {
+    list-style-type: none;
+    margin: 0;
+    margin-bottom: 5px;
+    padding: 0;
+    height: 100%;
+}
+
+#messageList li {
+    padding: 5px 10px;
+    border: 1px #ddd solid;
+}
+
+/*#messageList li:nth-child(odd) {
+    background: #eee;
+}*/
+
+.messageHolder {
+    border: 1px solid black;
+}
+
+.myMessage {
+    font-weight: bold;
+    text-align: right;
+    background: #eee;
+}
+
+.mainArea {
+    height: 500px;
 }

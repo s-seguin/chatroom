@@ -11,25 +11,26 @@
 </head>
 
 <body>
-<div class="container-fluid">
+<div class="container">
     <div class="row">
-        <div class="col-12 ">
-            <h1 id="greetingHeader">Hello user,</h1>
-            <h2> you are in the chatroom...</h2>
+        <div class="col">
+            <h2 id="greetingHeader">Hello user,</h2>
+            <h3> you are in the chatroom...</h3>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-4">Users List
-            <ul id="userList"></ul>
-        </div>
-        <div class="col-8">
+    <div class="row mainArea">
+         <div class="col-8">
             <ul id="messageList"></ul>
         </div>
+        <div class="col-4">Current Users:
+            <ul id="userList"></ul>
+        </div>
+       
     </div>
 
-    <div>
-        <div class="col-8 offset-4 fixed-bottom">
+    <div class="row">
+        <div class="col">
             <form action="">
                 <div class="input-group">
                     <input id="messageBox" class="form-control" autocomplete="off" type="text"

@@ -46,6 +46,7 @@ app.get('/', function(req, res){
 
 io.on('connection', function(socket){
     io.emit('chat log', chatLog); //broadcast the chatLog to everyone since someone new joined
+
     addUserToUserList(getUserNameFromSocketCookie(socket));
     io.emit('user list', userList); //broadcast the userList on new connection or disconnect
 
@@ -58,9 +59,9 @@ io.on('connection', function(socket){
     });
 
     socket.on('chat message', function(msg, usr){
-        let date = Date().toLocaleString();
-        io.emit('chat message', msg, date, usr);
-        chatLog.push({"user": usr, "date": date, "msg": msg});
+        let time = new Date().toLocaleTimeString();
+        io.emit('chat message', msg, time, usr);
+        chatLog.push({"user": usr, "time": time, "msg": msg});
     });
 
 });
