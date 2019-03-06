@@ -69,6 +69,21 @@ io.on('connection', function(socket){
         chatLog.push({"user": usr, "time": time, "msg": msg});
     });
 
+    socket.on('change username', function (oldUserName, newUserName) {
+        console.log("request to change username. Old: " + oldUserName + " new: " + newUserName);
+        if (!userExistsInUserList(newUserName)) {
+            removeUserFromUserList(oldUserName);
+            addUserToUserList(newUserName);
+            console.log("accepted");
+
+            io.emit('username change', oldUserName, newUserName, "accepted");
+            io.emit('user list', userList);
+        } else {
+            io.emit('username change', oldUserName, newUserName, "denied");
+            console.log("denied");
+        }
+    });
+
 });
 
 /**
@@ -88,7 +103,13 @@ function removeUserFromUserList(userName) {
     let index = userList.indexOf(userName);
     if (index > -1)
         userList.splice(index, 1);
+}
 
+function userExistsInUserList(userName) {
+    if (userList.indexOf(userName) == -1)
+        return false;
+    else
+        return true;
 }
 
 /**
