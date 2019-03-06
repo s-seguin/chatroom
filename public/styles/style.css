@@ -31,6 +31,15 @@ ul {
     background: #eee;
 }
 
+.systemMessage {
+    font-weight: bold;
+}
+
+.time {
+    font-size: .8em;
+    font-weight: lighter;
+}
+
 .mainArea {
     height: 500px;
 }
