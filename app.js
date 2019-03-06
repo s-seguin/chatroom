@@ -23,41 +23,46 @@ const POTENTIAL_USERNAMES = ["steve", "alice", "joe", "panther", "tiger", "falco
 
 //Basic routing
 app.get('/', function(req, res){
-    //Create a user cookie so that we can keep track of userList
-    let userCookie = req.cookies.userInfo;
+
+    let userCookie = req.cookies.userInfo;  //grab the user cookie (just the username)
+
+    //if it hasn't been defined this is a new user
     if (userCookie === undefined) {
-        let userName = createNewUser();
+        let userName = createNewUserName();
+        addUserToUserList(userName);
+
         console.log("Cookie unset, setting to " + userName);
         res.cookie('userInfo', userName, {maxAge: 4 * 60 * 60 * 1000});
 
     } else {
-       console.log("Welcome back " + userCookie);
-       if (userList.indexOf(userCookie) == -1) {
-           userList.push(userCookie);
-       } else {
-           console.log("There already appears to be a " + userCookie + " in the user list")
-       }
+        console.log("Welcome back " + userCookie);
+        addUserToUserList(userCookie);
     }
 
-
     res.sendFile(__dirname + '/index.html');
-
 });
 
+//handle the socket.io stuff
 io.on('connection', function(socket){
     io.emit('chat log', chatLog); //broadcast the chatLog to everyone since someone new joined
 
     addUserToUserList(getUserNameFromSocketCookie(socket));
     io.emit('user list', userList); //broadcast the userList on new connection or disconnect
 
+    /**
+     * Someone disconnected
+     */
     socket.on('disconnect', function(){
         console.log(getUserNameFromSocketCookie(socket) + ' disconnected');
         removeUserFromUserList(getUserNameFromSocketCookie(socket));
-        
+
         io.emit('user list', userList);
 
     });
 
+    /**
+     * Someone send a chat message, broadcast it to all other users with the current time
+     */
     socket.on('chat message', function(msg, usr){
         let time = new Date().toLocaleTimeString();
         io.emit('chat message', msg, time, usr);
@@ -66,16 +71,24 @@ io.on('connection', function(socket){
 
 });
 
+/**
+ * Add userName to the userList if it doesnt already exist on there
+ * @param userName
+ */
 function addUserToUserList(userName) {
     if (userList.indexOf(userName) == -1)
         userList.push(userName);
 }
 
+/**
+ * Remove userName from userList
+ * @param userName
+ */
 function removeUserFromUserList(userName) {
     let index = userList.indexOf(userName);
     if (index > -1)
         userList.splice(index, 1);
-        
+
 }
 
 /**
@@ -88,20 +101,25 @@ function getUserNameFromSocketCookie(socket) {
 }
 
 
+/**
+ * Create a new unique username that doesnt exist in userList
+ * @returns {string} the user name we created
+ */
+function createNewUserName() {
+    //let userName = POTENTIAL_USERNAMES[userList.length];
+    let userName = userList.length < POTENTIAL_USERNAMES.length
+        ? POTENTIAL_USERNAMES[userList.length]
+        : POTENTIAL_USERNAMES[Math.floor(Math.random() * 7)] + "_" + Math.floor(Math.random() * 100);
 
-function createNewUser() {
-    let userName = "";
+    let count = 0;
+    //check and see if the username exists
+    while (userList.indexOf(userName) != -1 && count <= 7) {
+        userName = POTENTIAL_USERNAMES[Math.floor(Math.random() * 7)] + "_" + Math.floor(Math.random() * 100);
+        count++;
 
-    if (userList.length > POTENTIAL_USERNAMES.length)
-        userName = POTENTIAL_USERNAMES[Math.floor(Math.random()*7)] + "_" + Math.floor(Math.random() * 100);
-    else
-        userName = POTENTIAL_USERNAMES[userList.length];
-
-    //if the username already exists in the list
-    if (userList.indexOf(userName) != -1)
-        console.log("Duplicate userList in userList list");
-
-    userList.push(userName);
+        if (count >= 7)
+            userName = userName + "_" + count;
+    }
 
     return userName;
 }

@@ -4,7 +4,6 @@ $(function () {
 
     var userName = document.cookie.replace(/(?:(?:^|.*;\s*)userInfo\s*\=\s*([^;]*).*$)|^.*$/, "$1");
 
-    //document.getElementById("greetingHeader").innerText = "Hello " + userName;
     $('#greetingHeader').text("Hello " + userName);
 
     $('form').submit(function(e){
@@ -19,6 +18,9 @@ $(function () {
             $('#messageList').append($('<li>').text(time + "  " + user + ": " + msg ).addClass("myMessage"));
         else
             $('#messageList').append($('<li>').text(time + "  " + user + ": " + msg ));
+
+        //scroll to bottom of messages
+        $("#messageList").scrollTop($("#messageList")[0].scrollHeight);
     });
 
     socket.on('chat log', function (log) {
@@ -30,6 +32,10 @@ $(function () {
                     $('#messageList').append($('<li>').text(log[entry].time + " " + log[entry].user + ": " + log[entry].msg ));
             }
             chatLogUpToDate = true;
+
+            //scroll to bottom of messages
+            $("#messageList").scrollTop($("#messageList")[0].scrollHeight);
+
         } else {
             console.log("We've already imported the chat log.");
         }
