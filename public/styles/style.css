@@ -10,33 +10,35 @@ ul {
     margin-bottom: 5px;
     padding: 0;
     height: 100%;
+    border: 1px #ddd solid;
+
 }
 
 #messageList li {
-    padding: 5px 10px;
-    border: 1px #ddd solid;
+    padding: 5px 2px;
 }
 
-/*#messageList li:nth-child(odd) {
-    background: #eee;
-}*/
-
 .messageHolder {
-    border: 1px solid black;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 5px 7px;
+    background: #eee;
 }
 
 .myMessage {
-    font-weight: bold;
+    /*font-weight: bold;*/
     text-align: right;
-    background: #eee;
 }
 
+.myMessage #bubble {
+    background: #5bd2ff;
+}
 .systemMessage {
     font-weight: bold;
 }
 
 .time {
-    font-size: .8em;
+    font-size: .75em;
     font-weight: lighter;
 }
 

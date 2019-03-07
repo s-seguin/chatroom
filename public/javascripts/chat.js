@@ -5,10 +5,10 @@ $(function () {
     let $greetingHeader = $('#greetingHeader');
 
     let chatLogUpToDate = false;
-    var socket = io();
+    let socket = io();
 
-    var userName = document.cookie.replace(/(?:(?:^|.*;\s*)userName\s*\=\s*([^;]*).*$)|^.*$/, "$1");
-    var userColor = document.cookie.replace(/(?:(?:^|.*;\s*)userColor\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+    let userName = document.cookie.replace(/(?:(?:^|.*;\s*)userName\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+    let userColor = document.cookie.replace(/(?:(?:^|.*;\s*)userColor\s*\=\s*([^;]*).*$)|^.*$/, "$1");
 
     $greetingHeader.text("Hello " + userName);
 
@@ -19,7 +19,7 @@ $(function () {
         if (msgVal.startsWith("/nickcolor")) {
             let splitMsg = msgVal.split(" ");
 
-            if (splitMsg.length !== 2 && !validHex(splitMsg[1]))
+            if (splitMsg.length !== 2 || !validHex(splitMsg[1]))
                 alert("incorrect command or color");
             else {
                 document.cookie = "userColor=" + "#" + splitMsg[1];
@@ -103,6 +103,12 @@ $(function () {
             }
         }
     });
+
+    socket.on('system message', function (user, message) {
+        if (userName === user) {
+            $messageList.append($('<li>').text(message));
+        }
+    });
 });
 
 function validHex(rbgStr) {
@@ -117,5 +123,6 @@ function buildMessage(msg, time, user, color) {
     let htmlMsg = "<span>" + msg + "</span>";
 
     let message = htmlTime + " " + htmlUser + ": " + htmlMsg;
+    message = "<span id='bubble' class='messageHolder'>" + message + "</span>";
     return $('<li>' + message + '</li>');
 }

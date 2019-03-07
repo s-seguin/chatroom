@@ -2,6 +2,8 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 
+const uuidv4 = require('uuid/v4');
+
 var app = express();
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cookieParser());
@@ -21,23 +23,48 @@ let chatLog = []; //a history of the chat log kept in memory
 let userList = []; //
 const POTENTIAL_USERNAMES = ["steve", "alice", "joe", "panther", "tiger", "falcon", "zebra"];
 
+let sendSysMsg = false;
+let newUserNameToMsg = "";
+let sysMsg = "";
+
 //Basic routing
 app.get('/', function (req, res) {
 
     let userName = req.cookies.userName;  //grab the user cookie (just the username)
+    let userID = req.cookies.userID;
+
+
 
     //if it hasn't been defined this is a new user
-    if (userName === undefined) {
-        let newUserName = createNewUserName();
-        addUserToUserList(newUserName);
+    if (userName === undefined || userID === undefined) {
+        let newUser = createNewUser();
 
-        console.log("Cookie unset, setting to " + newUserName);
-        res.cookie('userName', newUserName, {maxAge: 4 * 60 * 60 * 1000});
+        console.log("Cookie unset, setting to " + newUser.name);
+        res.cookie('userName', newUser.name, {maxAge: 4 * 60 * 60 * 1000});
+        res.cookie('userID', newUser.id);
         res.cookie('userColor', "#000000", {maxAge: 4 * 60 * 60 * 1000});
 
     } else {
-        console.log("Welcome back " + userName);
-        addUserToUserList(userName);
+        if (userExistsInUserList(userName)) {
+            let dupUsers = userList.filter(user => user.name === userName);
+            if (dupUsers.length > 1)
+                console.log("ERROR: we have more than one " + userName + " in our userList.");
+            else {
+                if (dupUsers[0].id !== userID) {
+                    console.log(userName + "It looks like someone took your old user name");
+
+                    let newUserName = createNewUser().name;
+                    res.cookie('userName', newUserName, {maxAge: 4 * 60 * 60 * 1000});
+
+                    newUserNameToMsg = newUserName;
+                    sendSysMsg = true;
+                    sysMsg = userName + " It looks like someone took your old user name. You are now called: " + newUserNameToMsg;
+
+                } else
+                    console.log("Welcome back " + userName);
+            }
+        }
+
     }
 
     res.sendFile(__dirname + '/index.html');
@@ -46,18 +73,31 @@ app.get('/', function (req, res) {
 //handle the socket.io stuff
 io.on('connection', function (socket) {
     io.emit('chat log', chatLog); //broadcast the chatLog to everyone since someone new joined
+    let user = getUserNameFromSocketCookie(socket);
+    let id = getUserIDFromSocketCookie(socket);
 
-    addUserToUserList(getUserNameFromSocketCookie(socket));
-    io.emit('user list', userList); //broadcast the userList on new connection or disconnect
+    if (userExistsInUserList(user))
+        console.log(user + " needs a new user name");
+    else
+        addUserToUserList(user, id);
+
+    io.emit('user list', userList.map(user => user.name)); //broadcast the userList on new connection or disconnect
+
+    if (sendSysMsg && newUserNameToMsg === user) {
+        io.emit('system message', user, sysMsg);
+        sendSysMsg = false;
+        newUserNameToMsg = "";
+        sysMsg = "";
+    }
 
     /**
      * Someone disconnected
      */
     socket.on('disconnect', function () {
-        console.log(getUserNameFromSocketCookie(socket) + ' disconnected');
-        removeUserFromUserList(getUserNameFromSocketCookie(socket));
+        console.log(user + ' disconnected');
+        removeUserFromUserList(user);
 
-        io.emit('user list', userList);
+        io.emit('user list', userList.map(user => user.name));
 
     });
 
@@ -73,10 +113,10 @@ io.on('connection', function (socket) {
     socket.on('change username', function (oldUserName, newUserName) {
         if (!userExistsInUserList(newUserName)) {
             removeUserFromUserList(oldUserName);
-            addUserToUserList(newUserName);
+            addUserToUserList(newUserName, id);
 
             io.emit('username change', oldUserName, newUserName, "accepted");
-            io.emit('user list', userList);
+            io.emit('user list', userList.map(user => user.name));
         } else {
             io.emit('username change', oldUserName, newUserName, "denied");
         }
@@ -88,9 +128,11 @@ io.on('connection', function (socket) {
  * Add userName to the userList if it doesnt already exist on there
  * @param userName
  */
-function addUserToUserList(userName) {
+function addUserToUserList(userName, id) {
+    //console.log("User to Add() name: " + userName + " id: " +id);
     if (!userExistsInUserList(userName))
-        userList.push(userName);
+        userList.push({"name": userName, "id": id});
+    // console.log(userList);
 }
 
 /**
@@ -98,16 +140,17 @@ function addUserToUserList(userName) {
  * @param userName
  */
 function removeUserFromUserList(userName) {
-    let index = userList.indexOf(userName);
-    if (index > -1)
-        userList.splice(index, 1);
+    userList = userList.filter(user => user.name !== userName);
+    // console.log(userList);
 }
 
 function userExistsInUserList(userName) {
-    if (userList.indexOf(userName) == -1)
-        return false;
-    else
+    let filteredList = userList.filter(user => user.name == userName);
+    //console.log("Filtered list: " + filteredList);
+    if (filteredList.length >= 1)
         return true;
+    else
+        return false;
 }
 
 /**
@@ -119,12 +162,17 @@ function getUserNameFromSocketCookie(socket) {
     return cookie.replace(/(?:(?:^|.*;\s*)userName\s*\=\s*([^;]*).*$)|^.*$/, "$1"); //parse the userName from the userName cookie
 }
 
+function getUserIDFromSocketCookie(socket) {
+    let cookie = socket.request.headers.cookie;
+    return cookie.replace(/(?:(?:^|.*;\s*)userID\s*\=\s*([^;]*).*$)|^.*$/, "$1"); //parse the userName from the userName cookie
+}
+
 
 /**
  * Create a new unique username that doesnt exist in userList
- * @returns {string} the user name we created
+ * @returns {array} the user name we created
  */
-function createNewUserName() {
+function createNewUser() {
     let userName = userList.length < POTENTIAL_USERNAMES.length
         ? POTENTIAL_USERNAMES[userList.length]
         : POTENTIAL_USERNAMES[Math.floor(Math.random() * 7)] + "_" + Math.floor(Math.random() * 100);
@@ -138,6 +186,6 @@ function createNewUserName() {
         if (count >= 7)
             userName = userName + "_" + count;
     }
-
-    return userName;
+    let id = uuidv4();
+    return {"name": userName, "id": id};
 }
