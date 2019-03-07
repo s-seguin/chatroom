@@ -12,7 +12,7 @@ app.use(cookieParser());
 var http = require('http').Server(app);
 
 //listen on port 3000
-http.listen(3000, function(){
+http.listen(3000, function () {
     console.log('listening on *:3000');
 });
 
@@ -34,14 +34,16 @@ app.get('/', function (req, res) {
     let userID = req.cookies.userID;
 
 
-
     //if it hasn't been defined this is a new user
     if (userName === undefined || userID === undefined) {
         let newUser = createNewUser();
 
         console.log("Cookie unset, setting to " + newUser.name);
+        console.log("userName " + userName);
+        console.log("UserID" + userID);
+
         res.cookie('userName', newUser.name, {maxAge: 4 * 60 * 60 * 1000});
-        res.cookie('userID', newUser.id);
+        res.cookie('userID', newUser.id, {maxAge: 12 * 60 * 60 * 1000});
         res.cookie('userColor', "#000000", {maxAge: 4 * 60 * 60 * 1000});
 
     } else {
@@ -83,6 +85,7 @@ io.on('connection', function (socket) {
 
     io.emit('user list', userList.map(user => user.name)); //broadcast the userList on new connection or disconnect
 
+    //did someone steal the username? if yes let them know
     if (sendSysMsg && newUserNameToMsg === user) {
         io.emit('system message', user, sysMsg);
         sendSysMsg = false;
@@ -106,19 +109,23 @@ io.on('connection', function (socket) {
      */
     socket.on('chat message', function (msg, usr, color) {
         let time = new Date().toLocaleTimeString();
+        if (usr === "system")
+            chatLog.push({"user": usr, "id": "system", "time": time, "msg": msg, "color": color});
+        else
+            chatLog.push({"user": usr, "id": id, "time": time, "msg": msg, "color": color});
+
         io.emit('chat message', msg, time, usr, color);
-        chatLog.push({"user": usr, "time": time, "msg": msg, "color": color});
     });
 
-    socket.on('change username', function (oldUserName, newUserName) {
+    socket.on('change username request', function (newUserName) {
         if (!userExistsInUserList(newUserName)) {
-            removeUserFromUserList(oldUserName);
+            removeUserFromUserList(user);
             addUserToUserList(newUserName, id);
 
-            io.emit('username change', oldUserName, newUserName, "accepted");
-            io.emit('user list', userList.map(user => user.name));
+            io.emit('username change', user, newUserName, "accepted");
+            io.emit('user list', userList.map(u => u.name));
         } else {
-            io.emit('username change', oldUserName, newUserName, "denied");
+            io.emit('username change', user, newUserName, "denied");
         }
     });
 
@@ -155,7 +162,7 @@ function userExistsInUserList(userName) {
 
 /**
  * Parse the cookies in the socket for the userName cookie
- * @param {socket} socket 
+ * @param {socket} socket
  */
 function getUserNameFromSocketCookie(socket) {
     let cookie = socket.request.headers.cookie;

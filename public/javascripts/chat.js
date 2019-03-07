@@ -9,10 +9,11 @@ $(function () {
 
     let userName = document.cookie.replace(/(?:(?:^|.*;\s*)userName\s*\=\s*([^;]*).*$)|^.*$/, "$1");
     let userColor = document.cookie.replace(/(?:(?:^|.*;\s*)userColor\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+    let userID = document.cookie.replace(/(?:(?:^|.*;\s*)userID\s*\=\s*([^;]*).*$)|^.*$/, "$1");
 
     $greetingHeader.text("Hello " + userName);
 
-    $('form').submit(function(e){
+    $('form').submit(function (e) {
         e.preventDefault(); // prevents page reloading
         let msgVal = $messageBox.val();
 
@@ -22,8 +23,9 @@ $(function () {
             if (splitMsg.length !== 2 || !validHex(splitMsg[1]))
                 alert("incorrect command or color");
             else {
-                document.cookie = "userColor=" + "#" + splitMsg[1];
+                setCookie("userColor", "#" + splitMsg[1], 4);
                 userColor = "#" + splitMsg[1];
+                $messageBox.val(''); //clear messageBox
             }
 
         } else if (msgVal.startsWith("/nick")) {
@@ -31,15 +33,18 @@ $(function () {
 
             if (splitMsg.length !== 2)
                 alert("incorrect command.");
-            else
-                socket.emit('change username', userName, splitMsg[1]);
+            else {
+                socket.emit('change username request', splitMsg[1]);
+                $messageBox.val(''); //clear messageBox
+            }
 
 
         } else {
             socket.emit('chat message', $messageBox.val(), userName, userColor);
+            $messageBox.val(''); //clear messageBox
+
         }
 
-        $messageBox.val(''); //clear messageBox
         return false;
 
     });
@@ -50,6 +55,8 @@ $(function () {
 
         if (user === userName)
             $messageList.append(message.addClass("myMessage"));
+        else if (user === "system")
+            $messageList.append(message.addClass("systemMessage"));
         else
             $messageList.append(message);
 
@@ -64,8 +71,11 @@ $(function () {
                 let e = log[entry];
                 let message = buildMessage(e.msg, e.time, e.user, e.color);
 
-                if (log[entry].user === userName)
+                //this lets us check if we sent the message with an old user name
+                if (log[entry].id === userID)
                     $messageList.append(message.addClass("myMessage"));
+                else if (log[entry].user === "system")
+                    $messageList.append(message.addClass("systemMessage"));
                 else
                     $messageList.append(message);
             }
@@ -85,7 +95,7 @@ $(function () {
         for (let name in userList) {
             $('#userList').append($('<li>').text(userList[name]));
         }
-        
+
     });
 
     socket.on('username change', function (oldUserName, newUserName, result) {
@@ -93,11 +103,11 @@ $(function () {
         if (oldUserName === userName) {
 
             if (result === "accepted") {
-                document.cookie = "userName=" + newUserName;
+                setCookie("userName", newUserName, 4)
                 userName = newUserName;
                 $greetingHeader.text("Hello " + userName);
 
-                //socket.emit('chat message', oldUserName + " changed their name to " +  newUserName, "system");
+                socket.emit('chat message', oldUserName + " changed their name to " + newUserName, "system");
             } else {
                 alert("The username " + newUserName + " has already been take. Choose a different one.");
             }
@@ -125,4 +135,17 @@ function buildMessage(msg, time, user, color) {
     let message = htmlTime + " " + htmlUser + ": " + htmlMsg;
     message = "<span id='bubble' class='messageHolder'>" + message + "</span>";
     return $('<li>' + message + '</li>');
+}
+
+/***
+ * Method to set cookies from modified from W3Schools
+ * @param cookieName
+ * @param cookieValue
+ * @param hoursToLive
+ */
+function setCookie(cookieName, cookieValue, hoursToLive) {
+    let d = new Date();
+    d.setTime(d.getTime() + (hoursToLive * 24 * 60 * 60 * 1000));
+    let expires = "expires=" + d.toUTCString();
+    document.cookie = cookieName + "=" + cookieValue + ";" + expires;
 }
