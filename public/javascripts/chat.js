@@ -55,8 +55,6 @@ $(function () {
 
         if (user === userName)
             $messageList.append(message.addClass("myMessage"));
-        else if (user === "system")
-            $messageList.append(message.addClass("systemMessage"));
         else
             $messageList.append(message);
 
@@ -74,8 +72,6 @@ $(function () {
                 //this lets us check if we sent the message with an old user name
                 if (log[entry].id === userID)
                     $messageList.append(message.addClass("myMessage"));
-                else if (log[entry].user === "system")
-                    $messageList.append(message.addClass("systemMessage"));
                 else
                     $messageList.append(message);
             }
@@ -133,7 +129,11 @@ function buildMessage(msg, time, user, color) {
     let htmlMsg = "<span>" + msg + "</span>";
 
     let message = htmlTime + " " + htmlUser + ": " + htmlMsg;
-    message = "<span id='bubble' class='messageHolder'>" + message + "</span>";
+    if (user === "system")
+        message = "<span id='bubble' class='messageHolder systemMessage'>" + message + "</span>";
+    else
+        message = "<span id='bubble' class='messageHolder'>" + message + "</span>";
+
     return $('<li>' + message + '</li>');
 }
 

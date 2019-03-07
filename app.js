@@ -109,6 +109,7 @@ io.on('connection', function (socket) {
      */
     socket.on('chat message', function (msg, usr, color) {
         let time = new Date().toLocaleTimeString();
+        msg = sanitizeUserString(msg);
         if (usr === "system")
             chatLog.push({"user": usr, "id": "system", "time": time, "msg": msg, "color": color});
         else
@@ -118,12 +119,15 @@ io.on('connection', function (socket) {
     });
 
     socket.on('change username request', function (newUserName) {
+        newUserName = sanitizeUserString(newUserName);
         if (!userExistsInUserList(newUserName)) {
             removeUserFromUserList(user);
             addUserToUserList(newUserName, id);
 
             io.emit('username change', user, newUserName, "accepted");
             io.emit('user list', userList.map(u => u.name));
+            user = newUserName; //set this socket.user to the new name
+
         } else {
             io.emit('username change', user, newUserName, "denied");
         }
@@ -195,4 +199,20 @@ function createNewUser() {
     }
     let id = uuidv4();
     return {"name": userName, "id": id};
+}
+
+/***
+ * Sanitize user provide strings
+ *
+ * From http://shebang.brandonmintern.com/foolproof-html-escaping-in-javascript/
+ * @param unsafeStr
+ * @returns {string}
+ */
+function sanitizeUserString(unsafeStr) {
+    return unsafeStr
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\"/g, '&quot;')
+        .replace(/\'/g, '&#39;'); // '&apos;' is not valid HTML 4
 }
