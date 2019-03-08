@@ -60,7 +60,7 @@ app.get('/', function (req, res) {
 
                     newUserNameToMsg = newUserName;
                     sendSysMsg = true;
-                    sysMsg = userName + " It looks like someone took your old user name. You are now called: " + newUserNameToMsg;
+                    sysMsg = userName + " it looks like someone took your old user name. :( You are now called: " + newUserNameToMsg;
 
                 } else
                     console.log("Welcome back " + userName);
@@ -83,7 +83,7 @@ io.on('connection', function (socket) {
     else
         addUserToUserList(user, id);
 
-    io.emit('user list', userList.map(user => user.name)); //broadcast the userList on new connection or disconnect
+    io.emit('user list', userList.map(user => user.name).sort()); //broadcast the userList on new connection or disconnect
 
     //did someone steal the username? if yes let them know
     if (sendSysMsg && newUserNameToMsg === user) {
@@ -94,13 +94,13 @@ io.on('connection', function (socket) {
     }
 
     /**
-     * Someone disconnected
+     * User disconnected
      */
     socket.on('disconnect', function () {
         console.log(user + ' disconnected');
         removeUserFromUserList(user);
 
-        io.emit('user list', userList.map(user => user.name));
+        io.emit('user list', userList.map(user => user.name).sort());
 
     });
 
@@ -111,7 +111,7 @@ io.on('connection', function (socket) {
         let time = new Date().toLocaleTimeString();
         msg = sanitizeUserString(msg);
         if (usr === "system")
-            chatLog.push({"user": usr, "id": "system", "time": time, "msg": msg, "color": color});
+            chatLog.push({"user": usr, "id": "system", "time": time, "msg": msg, "color": "#000"});
         else
             chatLog.push({"user": usr, "id": id, "time": time, "msg": msg, "color": color});
 
@@ -125,7 +125,7 @@ io.on('connection', function (socket) {
             addUserToUserList(newUserName, id);
 
             io.emit('username change', user, newUserName, "accepted");
-            io.emit('user list', userList.map(u => u.name));
+            io.emit('user list', userList.map(u => u.name).sort());
             user = newUserName; //set this socket.user to the new name
 
         } else {
@@ -155,6 +155,11 @@ function removeUserFromUserList(userName) {
     // console.log(userList);
 }
 
+/***
+ * Check if the given username exists in userList
+ * @param userName
+ * @returns {boolean}
+ */
 function userExistsInUserList(userName) {
     let filteredList = userList.filter(user => user.name == userName);
     //console.log("Filtered list: " + filteredList);
@@ -173,6 +178,11 @@ function getUserNameFromSocketCookie(socket) {
     return cookie.replace(/(?:(?:^|.*;\s*)userName\s*\=\s*([^;]*).*$)|^.*$/, "$1"); //parse the userName from the userName cookie
 }
 
+/***
+ * Parse the id from the cookie
+ * @param socket
+ * @returns {void | string | never}
+ */
 function getUserIDFromSocketCookie(socket) {
     let cookie = socket.request.headers.cookie;
     return cookie.replace(/(?:(?:^|.*;\s*)userID\s*\=\s*([^;]*).*$)|^.*$/, "$1"); //parse the userName from the userName cookie

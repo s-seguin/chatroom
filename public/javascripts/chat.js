@@ -13,38 +13,39 @@ $(function () {
 
     $greetingHeader.text("Hello " + userName);
 
+
     $('form').submit(function (e) {
         e.preventDefault(); // prevents page reloading
         let msgVal = $messageBox.val();
 
-        if (msgVal.startsWith("/nickcolor")) {
-            let splitMsg = msgVal.split(" ");
+        //prevent user from spamming enter
+        if (msgVal !== "") {
+            if (msgVal.startsWith("/nickcolor")) {
+                let splitMsg = msgVal.split(" ");
 
-            if (splitMsg.length !== 2 || !validHex(splitMsg[1]))
-                alert("incorrect command or color");
-            else {
-                setCookie("userColor", "#" + splitMsg[1], 4);
-                userColor = "#" + splitMsg[1];
+                if (splitMsg.length !== 2 || !validHex(splitMsg[1]))
+                    alert("incorrect command or color");
+                else {
+                    setCookie("userColor", "#" + splitMsg[1], 4);
+                    userColor = "#" + splitMsg[1];
+                    $messageBox.val(''); //clear messageBox
+                }
+
+            } else if (msgVal.startsWith("/nick")) {
+                let splitMsg = msgVal.split(" ");
+
+                if (splitMsg.length !== 2)
+                    alert("incorrect command.");
+                else {
+                    socket.emit('change username request', splitMsg[1]);
+                    $messageBox.val(''); //clear messageBox
+                }
+
+            } else {
+                socket.emit('chat message', msgVal, userName, userColor);
                 $messageBox.val(''); //clear messageBox
             }
-
-        } else if (msgVal.startsWith("/nick")) {
-            let splitMsg = msgVal.split(" ");
-
-            if (splitMsg.length !== 2)
-                alert("incorrect command.");
-            else {
-                socket.emit('change username request', splitMsg[1]);
-                $messageBox.val(''); //clear messageBox
-            }
-
-
-        } else {
-            socket.emit('chat message', $messageBox.val(), userName, userColor);
-            $messageBox.val(''); //clear messageBox
-
         }
-
         return false;
 
     });
@@ -75,6 +76,10 @@ $(function () {
                 else
                     $messageList.append(message);
             }
+
+            //tell the person who they are
+            let m = buildMessage("Welcome, you are " + userName + "!", null, "system", "#000");
+            $messageList.append(m);
             chatLogUpToDate = true;
 
             //scroll to bottom of messages
@@ -112,27 +117,45 @@ $(function () {
 
     socket.on('system message', function (user, message) {
         if (userName === user) {
-            $messageList.append($('<li>').text(message));
+            $messageList.append(buildMessage(message, null, "system", "#000"));
         }
     });
 });
 
-function validHex(rbgStr) {
+/***
+ * Checks if hexStr is a valid 3 or 6 digit hex code
+ * @param hexStr
+ * @returns {boolean}
+ */
+function validHex(hexStr) {
     let regex = /((^[0-9A-F]{6}$)|(^[0-9A-F]{3}$))/i;
 
-    return regex.test(rbgStr);
+    return regex.test(hexStr);
 }
 
+/***
+ * Builds the message item applying classes and ids to the different parts for styling upon render
+ *
+ * @param msg
+ * @param time
+ * @param user
+ * @param color
+ * @returns {jQuery|HTMLElement}
+ */
 function buildMessage(msg, time, user, color) {
-    let htmlTime = "<span class='time'>" + time + "</span>";
+    let htmlTime = time !== null ? "<span class='time'>" + time + "</span>" : null;
     let htmlUser = "<span style='color: " + color + "'>" + user + "</span>";
-    let htmlMsg = "<span>" + msg + "</span>";
+    let htmlMsg = user !== "system" ? "<span class='msg'>" + msg + "</span>" : "<span>" + msg + "</span>";
 
-    let message = htmlTime + " " + htmlUser + ": " + htmlMsg;
-    if (user === "system")
+    let message = "";
+    if (user === "system") {
+        message = htmlTime === null ? htmlMsg : htmlTime + ": " + htmlMsg;
         message = "<span id='bubble' class='messageHolder systemMessage'>" + message + "</span>";
-    else
-        message = "<span id='bubble' class='messageHolder'>" + message + "</span>";
+
+    } else {
+        message = htmlTime + " " + htmlUser + ": " + htmlMsg;
+        message = "<div id='bubble' class='messageHolder'>" + message + "</div>";
+    }
 
     return $('<li>' + message + '</li>');
 }
