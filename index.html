@@ -11,20 +11,22 @@
 </head>
 
 <body>
-<div class="container">
+<div class="container-fluid">
     <div class="row">
         <div class="col">
             <h2 id="greetingHeader">Hello user,</h2>
-            <h3> you are in the chatroom...</h3>
+            <h3> welcome to the chatroom...</h3>
         </div>
     </div>
 
     <div class="row mainArea">
-        <div class="col-md-4 h-100">Online Users:
-            <ul id="userList"></ul>
+        <div class="col-sm-2 h-100">
+            <div class="userContainer">
+                <ul id="userList"></ul>
+            </div>
         </div>
 
-        <div class="col-md-8 col-sm-12 h-100">
+        <div class="col-sm-10 col-xs-12 h-100">
             <div class="messageListContainer">
                 <ul id="messageList"></ul>
             </div>

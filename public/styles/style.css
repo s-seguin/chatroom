@@ -12,10 +12,9 @@ ul {
 }
 
 #userList li {
-    padding: 5px 2px;
     margin: 5px;
-    border: 1px #E5E5E5 solid;
-    background: #E5E5E5;
+    border-radius: 5px;
+    background: #f3f3f3;
 }
 
 #messageList {
@@ -73,6 +72,35 @@ ul {
 
 .msg {
     font-weight: lighter;
+}
+
+.profileImg {
+    padding: 2px;
+}
+
+.profileName {
+    font-size: 1.2em;
+    vertical-align: middle;
+    padding: 0px 10px;
+}
+
+.profileContainer {
+    padding: 1px;
+    margin-bottom: 2px;
+    vertical-align: middle;
+}
+
+.userContainer {
+    height: 100%;
+    border: 1px #E5E5E5 solid;
+}
+
+.onlineTitle {
+    font-size: 1em;
+    font-weight: lighter;
+    margin: 2px;
+    padding: 2px 5px;
+    color: #aaaaaa;
 }
 
 .mainArea {

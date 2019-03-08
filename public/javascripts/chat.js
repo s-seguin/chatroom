@@ -94,7 +94,7 @@ $(function () {
         console.log(userName + " joined my chat!");
         $('#userList').empty();
         for (let name in userList) {
-            $('#userList').append($('<li>').text(userList[name]));
+            $('#userList').append(buildUserBar(userList[name]));
         }
 
     });
@@ -158,6 +158,12 @@ function buildMessage(msg, time, user, color) {
     }
 
     return $('<li>' + message + '</li>');
+}
+
+function buildUserBar(name) {
+    let nameContainer = "<span class='profileName'>" + name + "</span>";
+    let bar = "<div class='profileContainer'><img class='profileImg' src='/imgs/activePerson.png' width='50px'/>" + nameContainer + "</div>";
+    return $('<li>' + bar + '</li>')
 }
 
 /***
