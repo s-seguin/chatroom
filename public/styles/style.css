@@ -82,6 +82,7 @@ ul {
     font-size: 1.2em;
     vertical-align: middle;
     padding: 0px 10px;
+    overflow-wrap: break-word;
 }
 
 .profileContainer {
@@ -105,5 +106,5 @@ ul {
 
 .mainArea {
     height: 65%;
-    padding-bottom: 5px;
+    padding-bottom: 7px;
 }
