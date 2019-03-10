@@ -1,7 +1,7 @@
 # chatroom
 a simple node.js web based chat room that uses socket.io
 
-## installation 
+## installation and usage
 1. Download Zip
 2. Extract contents
 3. Navigate to location on extracted contents in Terminal
