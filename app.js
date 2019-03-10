@@ -38,10 +38,6 @@ app.get('/', function (req, res) {
     if (userName === undefined || userID === undefined) {
         let newUser = createNewUser();
 
-        console.log("Cookie unset, setting to " + newUser.name);
-        console.log("userName " + userName);
-        console.log("UserID" + userID);
-
         res.cookie('userName', newUser.name, {maxAge: 4 * 60 * 60 * 1000});
         res.cookie('userID', newUser.id, {maxAge: 12 * 60 * 60 * 1000});
         res.cookie('userColor', "#000000", {maxAge: 4 * 60 * 60 * 1000});
@@ -140,10 +136,8 @@ io.on('connection', function (socket) {
  * @param userName
  */
 function addUserToUserList(userName, id) {
-    //console.log("User to Add() name: " + userName + " id: " +id);
     if (!userExistsInUserList(userName))
         userList.push({"name": userName, "id": id});
-    // console.log(userList);
 }
 
 /**
@@ -152,7 +146,6 @@ function addUserToUserList(userName, id) {
  */
 function removeUserFromUserList(userName) {
     userList = userList.filter(user => user.name !== userName);
-    // console.log(userList);
 }
 
 /***
@@ -162,7 +155,7 @@ function removeUserFromUserList(userName) {
  */
 function userExistsInUserList(userName) {
     let filteredList = userList.filter(user => user.name == userName);
-    //console.log("Filtered list: " + filteredList);
+
     if (filteredList.length >= 1)
         return true;
     else

@@ -85,13 +85,10 @@ $(function () {
             //scroll to bottom of messages
             $messageList.scrollTop($messageList[0].scrollHeight);
 
-        } else {
-            console.log("We've already imported the chat log.");
         }
     });
 
     socket.on('user list', function (userList) {
-        console.log(userName + " joined my chat!");
         $('#userList').empty();
         for (let name in userList) {
             $('#userList').append(buildUserBar(userList[name]));
