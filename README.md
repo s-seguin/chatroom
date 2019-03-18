@@ -11,3 +11,10 @@ a simple node.js web based chat room that uses socket.io
 7. Navigate to localhost:3000 in browsers
 8. Chat
 9. Use ctrl+c to kill server
+
+## commands
+1. /nick <newNickName> -> changes your nickname
+  e.g. /nick bob -> user will become bob
+2. /nickcolor <RBG> OR /nickcolor <RRGGBB> where RGB and RRGGBB are valid hex colors -> change your nickname color
+  e.g. /nickcolor FF0000 -> users nickname will become red
+
