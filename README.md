@@ -18,3 +18,5 @@ a simple node.js web based chat room that uses socket.io
 2. /nickcolor <RBG> OR /nickcolor <RRGGBB> where RGB and RRGGBB are valid hex colors -> change your nickname color
   e.g. /nickcolor FF0000 -> users nickname will become red
 
+## screenshots
+![image](https://user-images.githubusercontent.com/9789081/54545454-551e0280-4967-11e9-8fff-4c923f62f68e.png)
