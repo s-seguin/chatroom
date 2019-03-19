@@ -20,3 +20,5 @@ a simple node.js web based chat room that uses socket.io
 
 ## screenshots
 ![image](https://user-images.githubusercontent.com/9789081/54545681-c1990180-4967-11e9-802e-5d9d943003c2.png)
+
+![image](https://user-images.githubusercontent.com/9789081/54581560-d9599f80-49d2-11e9-9793-8e4bafb4e8cf.gif)
